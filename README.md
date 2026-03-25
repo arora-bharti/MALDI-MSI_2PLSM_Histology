@@ -46,7 +46,9 @@ MALDI-MSI_2PLSM_Histology/
 │   ├── Nuclei_segmentation.ipynb
 │   └── Low_high_coherence_percentage.ipynb
 │
-├── scripts/                      # Utility scripts
+├── scripts/                      # CLI scripts & utilities
+│   ├── analyze_texture.py        # CLI for texture analysis
+│   ├── segment_nuclei.py         # CLI for nuclei segmentation
 │   └── Merging.ijm               # ImageJ macro for overlay
 │
 ├── app/                          # Streamlit web app (planned)
@@ -88,79 +90,74 @@ pip install -r requirements.txt
 
 ## Usage
 
-### 1. Collagen Texture Analysis (2PLSM)
+### Quick Start (CLI Scripts)
 
-```python
-from src.modules_2photon import (
-    make_filtered_image,
-    make_image_gradients,
-    make_structure_tensor_2d,
-    make_coherence,
-    make_orientation
-)
-import numpy as np
-from PIL import Image
+The easiest way to use this pipeline is via command-line scripts:
 
-# Load image
-raw_image = np.array(Image.open("your_image.tif").convert("L"))
+#### Collagen Texture Analysis
+```bash
+# Analyze a single image
+python scripts/analyze_texture.py -i image.tif -o results/
 
-# Parameters
-filter_sigma = 2           # Gaussian filter sigma
-local_sigma = 10           # Structure tensor local sigma
-threshold = np.median(raw_image)
+# Analyze a folder of images
+python scripts/analyze_texture.py -i data/2plsm_images/ -o results/
 
-# Analysis pipeline
-filtered_image = make_filtered_image(raw_image, filter_sigma)
-grad_x, grad_y = make_image_gradients(filtered_image)
-structure_tensor, eigenvalues, eigenvectors, Jxx, Jxy, Jyy = make_structure_tensor_2d(
-    grad_x, grad_y, local_sigma
-)
-coherence = make_coherence(filtered_image, eigenvalues, structure_tensor, threshold)
-orientation = make_orientation(filtered_image, Jxx, Jxy, Jyy, threshold)
+# With custom parameters
+python scripts/analyze_texture.py -i data/ -o results/ \
+    --filter-sigma 3 \
+    --local-sigma 15 \
+    --local-density-kernel 25
 ```
 
-Or run the notebook:
+#### Nuclei Segmentation
 ```bash
+# Segment a single image
+python scripts/segment_nuclei.py -i histology.tif -o results/
+
+# Segment a folder of images
+python scripts/segment_nuclei.py -i data/histology/ -o results/
+
+# With custom thresholds
+python scripts/segment_nuclei.py -i data/ -o results/ \
+    --prob-thresh 0.5 \
+    --nms-thresh 0.4
+```
+
+### Interactive Analysis (Notebooks)
+
+For interactive exploration and visualization:
+
+```bash
+# Texture analysis with step-by-step visualization
 jupyter notebook notebooks/Collagen_textureanalysis.ipynb
+
+# Nuclei segmentation with morphometry
+jupyter notebook notebooks/Nuclei_segmentation.ipynb
+
+# Coherence statistics
+jupyter notebook notebooks/Low_high_coherence_percentage.ipynb
 ```
 
-### 2. Nuclei Segmentation (Histology)
+### Python API
+
+For integration into your own scripts:
 
 ```python
-from src.modules_histo import (
-    MyNormalizer,
-    mean_filter,
-    normalize_density_maps,
-    weighted_kde_density_map
+# Texture analysis
+from src.modules_2photon import (
+    make_filtered_image, make_structure_tensor_2d,
+    make_coherence, make_orientation
 )
-from stardist.models import StarDist2D
-from tifffile import imread
-import numpy as np
 
-# Load image
-img = imread("your_histology.tif")
-
-# Initialize StarDist model
-model = StarDist2D.from_pretrained('2D_versatile_he')
-
-# Normalize
-mi, ma = np.percentile(img, [25.0, 85.0])
-normalizer = MyNormalizer(mi, ma)
-
-# Segment nuclei
-labels, polys = model.predict_instances(img, normalizer=normalizer)
-
-# Calculate density
-density = mean_filter(labels)
-density_normalized = normalize_density_maps(density)
+# Nuclei segmentation
+from src.modules_histo import (
+    MyNormalizer, mean_filter, normalize_density_maps
+)
 ```
 
-Or run the notebook:
-```bash
-jupyter notebook notebooks/Nuclei_segmentation.ipynb
-```
+See the notebooks for complete usage examples.
 
-### 3. ImageJ Overlay (Optional)
+### ImageJ Overlay (Optional)
 
 For merging coherence/density maps with original images:
 
@@ -222,12 +219,6 @@ If you use this code in your research, please cite:
   doi={10.1038/s44303-024-00041-3}
 }
 ```
-
-## Related Repositories
-
-- [PyTextureAnalysis](https://github.com/ajinkya-kulkarni/PyTextureAnalysis) - Streamlit app for texture analysis
-- [PyHistology](https://github.com/ajinkya-kulkarni/PyHistology) - Streamlit app for histology segmentation
-- [PySpatialHistologyAnalysis](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis) - Spatial analysis of H&E images
 
 ## License
 
