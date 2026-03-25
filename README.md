@@ -90,7 +90,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Quick Start (CLI Scripts)
+### Quick Start
 
 The easiest way to use this pipeline is via command-line scripts:
 
