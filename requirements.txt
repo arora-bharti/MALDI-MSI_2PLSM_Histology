@@ -26,5 +26,5 @@ matplotlib>=3.5.0
 # Progress bars
 tqdm>=4.62.0
 
-# Optional: For Streamlit web app (future)
-# streamlit>=1.20.0
+#Useful for interactive visualizations and dashboards
+streamlit>=1.20.0
