@@ -1,0 +1,114 @@
+cff-version: 1.2.0
+title: >-
+  MALDI imaging combined with two-photon microscopy reveals
+  local differences in the heterogeneity of colorectal cancer
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - family-names: Arora
+    given-names: Bharti
+    email: bharti.arora@mpinat.mpg.de
+    affiliation: >-
+      Max Planck Institute for Multidisciplinary Sciences,
+      Göttingen, Germany
+    orcid: 'https://orcid.org/0000-0000-0000-0000'
+  - family-names: Kulkarni
+    given-names: Ajinkya
+    email: ajinkya.kulkarni@mpinat.mpg.de
+    affiliation: >-
+      Max Planck Institute for Multidisciplinary Sciences,
+      Göttingen, Germany
+  - family-names: Markus
+    given-names: M. Andrea
+    affiliation: >-
+      Max Planck Institute for Multidisciplinary Sciences,
+      Göttingen, Germany
+  - family-names: Ramos-Gomes
+    given-names: Fernanda
+    affiliation: >-
+      Max Planck Institute for Multidisciplinary Sciences,
+      Göttingen, Germany
+  - family-names: Bohnenberger
+    given-names: Hanibal
+    affiliation: >-
+      Institute of Pathology, University Medical Center Göttingen,
+      Germany
+  - family-names: Ströbel
+    given-names: Philipp
+    affiliation: >-
+      Institute of Pathology, University Medical Center Göttingen,
+      Germany
+  - family-names: Alves
+    given-names: Frauke
+    affiliation: >-
+      Max Planck Institute for Multidisciplinary Sciences,
+      Göttingen, Germany
+  - family-names: Klein
+    given-names: Oliver
+    affiliation: >-
+      Berlin Institute of Health at Charité - Universitätsmedizin Berlin,
+      Core Unit Imaging Mass Spectrometry, Germany
+identifiers:
+  - type: doi
+    value: 10.1038/s44303-024-00041-3
+    description: The DOI of the published article
+  - type: url
+    value: 'https://doi.org/10.1038/s44303-024-00041-3'
+    description: The URL of the published article
+repository-code: 'https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology'
+url: 'https://doi.org/10.1038/s44303-024-00041-3'
+abstract: >-
+  This repository contains the nuclei segmentation and texture
+  analysis source codes for the correlative imaging approach
+  combining MALDI mass spectrometry imaging (MALDI-MSI) with
+  two-photon laser scanning microscopy (2PLSM) and histology
+  to characterize the spatial heterogeneity of colorectal cancer
+  (CRC) patient tissues. The approach correlates collagen fiber
+  coherence from 2PLSM with nuclei distribution from H&E histology
+  and proteomics signatures from MALDI-MSI.
+keywords:
+  - MALDI-MSI
+  - two-photon microscopy
+  - 2PLSM
+  - histology
+  - colorectal cancer
+  - image analysis
+  - nuclei segmentation
+  - texture analysis
+  - collagen coherence
+  - StarDist
+  - structure tensor
+license: AGPL-3.0
+version: 1.0.0
+date-released: '2024-09-23'
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Arora
+      given-names: Bharti
+    - family-names: Kulkarni
+      given-names: Ajinkya
+    - family-names: Markus
+      given-names: M. Andrea
+    - family-names: Ramos-Gomes
+      given-names: Fernanda
+    - family-names: Bohnenberger
+      given-names: Hanibal
+    - family-names: Ströbel
+      given-names: Philipp
+    - family-names: Alves
+      given-names: Frauke
+    - family-names: Klein
+      given-names: Oliver
+  doi: 10.1038/s44303-024-00041-3
+  journal: npj Imaging
+  title: >-
+    MALDI imaging combined with two-photon microscopy reveals
+    local differences in the heterogeneity of colorectal cancer
+  volume: 2
+  issue: 35
+  year: 2024
+  publisher:
+    name: Nature Publishing Group
