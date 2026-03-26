@@ -41,6 +41,11 @@ from .modules_histo import (
     make_binned_image,
     MyNormalizer,
     make_mosaic_and_save,
+    normalize_staining,
+    make_nuclei_network,
+    make_voronoi_tessellation,
+    plot_nuclei_network,
+    plot_voronoi,
 )
 
 from .modules_maldi import (

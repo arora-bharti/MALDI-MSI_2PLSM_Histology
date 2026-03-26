@@ -43,9 +43,6 @@ from csbdeep.data import Normalizer, normalize_mi_ma
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 
-from csbdeep.utils import Path, normalize
-from csbdeep.data import Normalizer, normalize_mi_ma
-
 from tqdm.auto import tqdm
 
 from skimage.measure import regionprops
@@ -286,3 +283,208 @@ def make_mosaic_and_save(img, labels, num_clusters, Local_Density_mean_filter, L
 	print()
 
 ########################################################################################
+
+def normalize_staining(image, target_concentrations=None):
+	"""
+	Normalise H&E staining using colour deconvolution (Ruifrok & Johnston method).
+
+	Converts the RGB image to optical density (OD) space using known H&E stain
+	vectors, deconvolves the stain concentrations, and reconstructs a normalised
+	RGB image scaled to a reference maximum concentration. This corrects for
+	batch-to-batch staining variability across slides and scanners.
+
+	No additional dependencies required — uses scikit-image, already in requirements.
+
+	Parameters:
+	image (np.ndarray): RGB H&E image, dtype uint8, shape (H, W, 3).
+	target_concentrations (np.ndarray or None): Reference maximum concentration
+		for each stain [H_max, E_max]. Default: [1.9, 1.0] from typical H&E slides.
+
+	Returns:
+	np.ndarray: Normalised RGB image, uint8, same shape as input.
+	"""
+	from skimage.color import separate_stains, combine_stains
+
+	# Standard H&E stain matrix (Ruifrok & Johnston, Anal Quant Cytol Histol 2001)
+	HE_stain_matrix = np.array([
+		[0.65, 0.70, 0.29],
+		[0.07, 0.99, 0.11],
+		[0.27, 0.57, 0.78]
+	])
+
+	if target_concentrations is None:
+		target_concentrations = np.array([1.9, 1.0])
+
+	# Deconvolve: separate_stains returns OD concentrations per stain channel
+	stains = separate_stains(image.astype(np.float32) / 255.0, HE_stain_matrix)
+
+	# Normalise each stain channel to its target maximum
+	for ch in range(2):
+		ch_max = stains[:, :, ch].max()
+		if ch_max > 0:
+			stains[:, :, ch] = stains[:, :, ch] / ch_max * target_concentrations[ch]
+
+	# Zero out the third (background) channel
+	stains[:, :, 2] = 0.0
+
+	# Reconstruct RGB
+	normalised = combine_stains(stains, np.linalg.inv(HE_stain_matrix))
+	normalised = np.clip(normalised * 255.0, 0, 255).astype(np.uint8)
+
+	return normalised
+
+########################################################################################
+
+def make_nuclei_network(label_image, max_distance=None):
+	"""
+	Build a spatial proximity network of detected nuclei.
+
+	Each nucleus centroid is a node. An edge connects two nuclei if their
+	centroids are within max_distance pixels of each other. Edge weight is
+	the inverse of the Euclidean distance (closer nuclei → stronger connection).
+
+	Requires: pip install networkx
+
+	Parameters:
+	label_image (np.ndarray): Integer label image from StarDist (each nucleus
+		has a unique positive integer label; background is 0).
+	max_distance (float or None): Maximum centroid-to-centroid distance in pixels
+		for edge creation. If None, uses 10% of the shorter image dimension.
+
+	Returns:
+	tuple:
+		G (networkx.Graph): Spatial nuclei network. Node attributes: 'centroid',
+			'area'. Edge attributes: 'weight' (inverse distance).
+		centroids (np.ndarray): Array of shape (n_nuclei, 2) with (row, col)
+			centroid coordinates.
+	"""
+	try:
+		import networkx as nx
+	except ImportError:
+		raise ImportError("networkx is required. Install with: pip install networkx")
+
+	if max_distance is None:
+		max_distance = 0.10 * min(label_image.shape)
+
+	regions = regionprops(label_image)
+	centroids = np.array([r.centroid for r in regions])
+	areas = np.array([r.area for r in regions])
+	labels = np.array([r.label for r in regions])
+
+	G = nx.Graph()
+	for i, (centroid, area, lbl) in enumerate(zip(centroids, areas, labels)):
+		G.add_node(i, centroid=tuple(centroid), area=int(area), label=int(lbl))
+
+	n = len(centroids)
+	for i in range(n):
+		for j in range(i + 1, n):
+			dist = float(np.linalg.norm(centroids[i] - centroids[j]))
+			if dist <= max_distance and dist > 0:
+				G.add_edge(i, j, weight=1.0 / dist)
+
+	return G, centroids
+
+########################################################################################
+
+def make_voronoi_tessellation(label_image):
+	"""
+	Compute the Voronoi tessellation of nucleus centroids.
+
+	Each nucleus centroid becomes a Voronoi site. The tessellation partitions
+	the image plane into regions of influence for each nucleus — larger Voronoi
+	regions indicate more isolated nuclei (lower local density).
+
+	Uses scipy.spatial.Voronoi, already a project dependency.
+
+	Parameters:
+	label_image (np.ndarray): Integer label image from StarDist segmentation.
+
+	Returns:
+	tuple:
+		vor (scipy.spatial.Voronoi): Fitted Voronoi object.
+		centroids (np.ndarray): Array of shape (n_nuclei, 2) with (col, row)
+			coordinates in (x, y) order as required by scipy.spatial.Voronoi.
+	"""
+	from scipy.spatial import Voronoi
+
+	regions = regionprops(label_image)
+	# Voronoi expects (x, y) = (col, row)
+	centroids = np.array([[r.centroid[1], r.centroid[0]] for r in regions])
+
+	if len(centroids) < 4:
+		raise ValueError("Voronoi tessellation requires at least 4 nuclei.")
+
+	vor = Voronoi(centroids)
+	return vor, centroids
+
+########################################################################################
+
+def plot_nuclei_network(label_image, G, centroids, image=None):
+	"""
+	Visualise the nuclei spatial proximity network overlaid on the tissue image.
+
+	Parameters:
+	label_image (np.ndarray): Integer label image from StarDist segmentation.
+	G (networkx.Graph): Output of make_nuclei_network().
+	centroids (np.ndarray): Centroid array (n_nuclei, 2) in (row, col) order.
+	image (np.ndarray or None): Background RGB or grayscale image. Optional.
+
+	Returns:
+	matplotlib.figure.Figure
+	"""
+	fig, ax = plt.subplots(figsize=(10, 10))
+
+	background = image if image is not None else label_image
+	ax.imshow(background, cmap='gray' if background.ndim == 2 else None, alpha=0.6)
+
+	for u, v in G.edges():
+		y0, x0 = centroids[u]
+		y1, x1 = centroids[v]
+		ax.plot([x0, x1], [y0, y1], color='steelblue', linewidth=0.4, alpha=0.5)
+
+	ax.scatter(centroids[:, 1], centroids[:, 0],
+			   s=6, color='tomato', zorder=3,
+			   label=f'Nuclei (n={len(centroids)})')
+
+	ax.set_title(
+		f'Nuclei network  |  nodes: {G.number_of_nodes()}  edges: {G.number_of_edges()}',
+		fontsize=12)
+	ax.set_xticks([])
+	ax.set_yticks([])
+	ax.legend(fontsize=9, loc='upper right')
+	plt.tight_layout()
+	return fig
+
+########################################################################################
+
+def plot_voronoi(vor, centroids, image_shape, image=None):
+	"""
+	Visualise the Voronoi tessellation of nucleus centroids.
+
+	Parameters:
+	vor (scipy.spatial.Voronoi): Output of make_voronoi_tessellation().
+	centroids (np.ndarray): Centroid array (n_nuclei, 2) in (col, row) / (x, y) order.
+	image_shape (tuple): (height, width) of the tissue image.
+	image (np.ndarray or None): Background image to display. Optional.
+
+	Returns:
+	matplotlib.figure.Figure
+	"""
+	from scipy.spatial import voronoi_plot_2d
+
+	fig, ax = plt.subplots(figsize=(10, 10))
+
+	if image is not None:
+		ax.imshow(image, cmap='gray' if image.ndim == 2 else None, alpha=0.5,
+				  extent=[0, image_shape[1], image_shape[0], 0])
+
+	voronoi_plot_2d(vor, ax=ax, show_vertices=False,
+					line_colors='steelblue', line_width=0.6, point_size=3)
+
+	ax.set_xlim(0, image_shape[1])
+	ax.set_ylim(image_shape[0], 0)
+	ax.set_title('Voronoi tessellation of nucleus centroids', fontsize=12)
+	ax.set_xticks([])
+	ax.set_yticks([])
+	plt.tight_layout()
+	return fig

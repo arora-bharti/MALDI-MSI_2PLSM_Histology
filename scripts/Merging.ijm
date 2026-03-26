@@ -1,7 +1,19 @@
-// Define the base paths for input, output, and merged directories
-String baseInputPath = "//input_data/";
-String baseOutputPath = "//output_data/density/";
-String mergedOutputPath = "//merged/";
+// Merging.ijm
+// Overlay a density map onto its corresponding original image and save as PNG.
+//
+// Usage: Open the original image in Fiji first, then run this macro.
+// A dialog will ask for the density images folder and the output folder.
+
+// ── User-configurable paths (via dialog) ────────────────────────────────────────
+Dialog.create("Merging: Set Folders");
+Dialog.addDirectory("Density images folder", "");
+Dialog.addDirectory("Output (merged) folder", "");
+Dialog.show();
+
+String baseOutputPath   = Dialog.getString();
+String mergedOutputPath = Dialog.getString();
+
+// ── Main workflow ────────────────────────────────────────────────────────────────
 
 // Obtain the title of the already open original image
 String originalFileNameWithExt = getTitle();
