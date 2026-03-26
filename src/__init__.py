@@ -43,6 +43,24 @@ from .modules_histo import (
     make_mosaic_and_save,
 )
 
+from .modules_maldi import (
+    read_imzml,
+    normalize_tic,
+    find_and_align_peaks,
+    generate_ion_image,
+    build_data_cube,
+    import_qupath_annotations,
+    compute_roc_per_mz,
+    get_discriminative_mz,
+    run_pca,
+    run_bisecting_kmeans,
+    plot_mean_spectrum,
+    plot_ion_images,
+    plot_pca_results,
+    plot_segmentation,
+    plot_roc_summary,
+)
+
 __version__ = "1.0.0"
 __author__ = "Bharti Arora, Ajinkya Kulkarni"
 __email__ = "bharti.arora@mpinat.mpg.de"
