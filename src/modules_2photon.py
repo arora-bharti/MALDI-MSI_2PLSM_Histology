@@ -558,45 +558,32 @@ def stitch_back_chunks(analyzed_chunk_list, padded_img, img, chunk_size):
 
 ########################################################################################
 
-def perform_statistical_analysis(filename, LocalSigmaKey, Image_Coherance):
+def perform_statistical_analysis(filename, LocalSigmaKey, Image_Orientation, Image_Coherance, fibrotic_percentage):
 	"""
-	Calculate various statistical parameters of the given image data and save the results in a CSV file.
+	Calculate coherence statistics for a single image and return the results as a numpy array.
 
 	Parameters:
 	filename (str): The name of the file being processed.
 	LocalSigmaKey (int): The value of LocalSigmaKey used in the image processing.
-	Image_Orientation (numpy array): An array of orientation data for the image.
+	Image_Orientation (numpy array): An array of orientation data for the image (reserved for future use).
 	Image_Coherance (numpy array): An array of coherence data for the image.
-	percentage_area (float): Percentage of fibrotic area in the image
+	fibrotic_percentage (float): Percentage of fibrotic (collagen-dense) area in the image.
 
 	Returns:
-	None.
+	numpy.ndarray: 2D array of shape (1, 4) containing
+		[filename, fibrotic_percentage, low_coherance, high_coherance].
 	"""
-	
-	# Convert Image_Orientation to radians
-	#Image_Orientation_rad = np.deg2rad(Image_Orientation)
 
-	# Calculate circular and normal means of Image_Orientation
-	#CircMean = circmean(Image_Orientation_rad[~np.isnan(Image_Orientation_rad)], low=0, high=np.pi)
-	#NormalMean = np.nanmean(Image_Orientation_rad)
-
-	# Calculate circular and normal standard deviations of Image_Orientation
-	#CircStdDev = circstd(Image_Orientation_rad[~np.isnan(Image_Orientation_rad)], low=0, high=np.pi)
-	#NormalStdDev = np.nanstd(Image_Orientation_rad)
-
-	# Calculate circular variance of Image_Orientation
-	#CircVar = circular_variance(Image_Orientation_rad)
-
-	# Calculate low and high coherance values
+	# Calculate low and high coherance values using a 2-bin histogram
 	Image_Coherance_temp = Image_Coherance[~np.isnan(Image_Coherance)].copy()
 	histogram_coherance = plt.hist(Image_Coherance_temp, bins=2, weights=np.ones(len(Image_Coherance_temp))/len(Image_Coherance_temp))
 	plt.close()
 	low_coherance, high_coherance = np.round(100 * histogram_coherance[0], 2)
 
 	# Combine the results into a single numpy array
-	results_array = np.asarray((filename, low_coherance, high_coherance))
-	
-	# Modify the array shape so as to fit in with the dataframe later. Essentially make the shape (n, 1) from (n,)
+	results_array = np.asarray((filename, fibrotic_percentage, low_coherance, high_coherance))
+
+	# Make shape (1, 4) so it fits into the DataFrame builder
 	results_array = np.atleast_2d(results_array)
 
 	return results_array
@@ -763,41 +750,26 @@ def make_mosiac_plot(raw_image, binarized_image, filtered_image, Local_Density, 
 
 def load_pandas_dataframe(results_array):
 	"""
-	Creates a Pandas DataFrame from a 2D NumPy array.
+	Creates a Pandas DataFrame from the output of perform_statistical_analysis().
 
 	Parameters
 	----------
 	results_array : numpy.ndarray
-		A 2D array of shape (n, 10) containing the results of a computation.
+		A 2D array of shape (n, 4) as returned by perform_statistical_analysis().
+		Columns: [filename, fibrotic_percentage, low_coherance, high_coherance].
 
 	Returns
 	-------
 	pandas.DataFrame
-		A DataFrame with 11 columns, containing the following data from results_array:
-			- Name of the uploaded image
-			- Mean Orientation
-			- Circular Mean Orientation
-			- StdDev Orientation
-			- Circular StdDev Orientation
-			- Circular Variance
-			- Mean Coherance
-			- Median Coherance
-			- StdDev Coherance
-			- % Low Coherance
-			- % High Coherance
+		A DataFrame with 3 columns:
+			- Fibrotic percentage [%]
+			- % Low Coherance regions
+			- % High Coherance regions
 	"""
-	dataframe =  pd.DataFrame({
+	dataframe = pd.DataFrame({
 		"Fibrotic percentage [%]": results_array[:, 1],
-		"Mean Orientation [degrees]": results_array[:, 2],
-		"Circular Mean Orientation [degrees]": results_array[:, 3],
-		"Standard Deviation Orientation [degrees]": results_array[:, 4],
-		"Circular Standard Deviation Orientation [degrees]": results_array[:, 5],
-		"Circular Variance Orientation [degrees]": results_array[:, 6],
-		"Mean Coherance": results_array[:, 7],
-		"Median Coherance": results_array[:, 8],
-		"Standard Deviation Coherance": results_array[:, 9],
-		"% Low Coherance regions": results_array[:, 10],
-		"% High Coherance regions": results_array[:, 11]})
+		"% Low Coherance regions": results_array[:, 2],
+		"% High Coherance regions": results_array[:, 3]})
 
 	return dataframe
 
