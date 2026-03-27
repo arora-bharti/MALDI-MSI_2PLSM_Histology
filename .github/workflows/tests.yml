@@ -31,7 +31,12 @@ jobs:
         run: mypy src/ --ignore-missing-imports --no-strict-optional --no-error-summary
 
       - name: Security audit (pip-audit)
-        run: pip-audit
+        # CVE-2026-4539: ReDoS in pygments AdlLexer (archetype.py).
+        # Ignored because: (1) this app never processes ADL files so the
+        # vulnerable code path is never reached, (2) no patched release exists
+        # yet (fix merged upstream, awaiting pygments >2.19.2).
+        # Revisit when a new pygments release is available.
+        run: pip-audit --ignore-vuln CVE-2026-4539
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
