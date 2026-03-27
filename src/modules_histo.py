@@ -24,30 +24,23 @@
 
 ########################################################################################
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # must be set before TensorFlow/StarDist are imported
+
 import numpy as np
 import matplotlib.pyplot as plt
-
 import cv2
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-from tifffile import imread, imsave
-from csbdeep.utils import Path, normalize
-
-from stardist import random_label_cmap
-from stardist.models import StarDist2D
-
 import pandas as pd
-from csbdeep.data import Normalizer, normalize_mi_ma
 
 from PIL import Image
-Image.MAX_IMAGE_PIXELS = None
-
 from tqdm.auto import tqdm
-
 from skimage.measure import regionprops
 from sklearn.neighbors import KernelDensity
 from scipy.ndimage import gaussian_filter
+from stardist import random_label_cmap
+from csbdeep.data import Normalizer, normalize_mi_ma
+
+Image.MAX_IMAGE_PIXELS = None  # must be set before any image is opened
 
 ##########################################################################
 

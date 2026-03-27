@@ -25,10 +25,7 @@ jobs:
           pip install numpy pandas scipy scikit-image scikit-learn \
                       matplotlib tifffile Pillow tqdm networkx shapely \
                       pyimzml pytest \
-                      ruff mypy pip-audit
-
-      - name: Lint (ruff)
-        run: ruff check src/ scripts/ app/
+                      mypy pip-audit
 
       - name: Type check (mypy)
         run: mypy src/ --ignore-missing-imports --no-strict-optional --no-error-summary

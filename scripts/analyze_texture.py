@@ -34,7 +34,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.modules_2photon import (
     make_filtered_image,
-    binarize_image,
     convolve,
     percentage_area,
     make_image_gradients,
@@ -71,9 +70,6 @@ def analyze_single_image(image_path, output_dir, filter_sigma, local_density_ker
 
     # Filter image
     filtered_image = make_filtered_image(raw_image, filter_sigma)
-
-    # Binarize
-    binarized_image = binarize_image(filtered_image)
 
     # Local density
     kernel_size = local_density_kernel if local_density_kernel % 2 == 1 else local_density_kernel + 1

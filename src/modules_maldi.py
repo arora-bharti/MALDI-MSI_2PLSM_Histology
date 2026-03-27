@@ -47,7 +47,6 @@ from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import json
-import os
 
 from scipy import signal
 from scipy.stats import mannwhitneyu

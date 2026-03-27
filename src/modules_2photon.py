@@ -26,22 +26,19 @@
 ########################################################################################
 
 from PIL import Image
-Image.MAX_IMAGE_PIXELS = None
-
 import numpy as np
 import pandas as pd
 
 from scipy import ndimage
-from scipy.stats import circmean, circstd
 from scipy import signal
 
-from skimage.filters import threshold_mean, gaussian, threshold_otsu
-from skimage.morphology import disk
-from skimage.filters import rank
+from skimage.filters import gaussian, threshold_otsu
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1 import axes_size
+
+Image.MAX_IMAGE_PIXELS = None  # must be set before any image is opened
 
 ########################################################################################
 
@@ -272,7 +269,7 @@ def make_image_gradients(image, filter=None):
 	if len(image.shape) != 2:
 		raise ValueError("Input image must be a 2D array")
 
-	if filter == None or filter == 'sobel':
+	if filter is None or filter == 'sobel':
 		image_gradient_x = ndimage.sobel(image, axis=0)
 		image_gradient_y = ndimage.sobel(image, axis=1)
 
@@ -841,7 +838,7 @@ def independent_analysis_function(filename, FilterKey, LocalSigmaKey, ThresholdV
 
 	# Plot the results
 
-	fig = make_mosiac_plot(raw_image, binarized_image, filtered_image, Local_Density, Image_Coherance, Image_Orientation, vx, vy, filename, LocalSigmaKey, fibrotic_percentage, SpacingKey, ScaleKey, FIGSIZE, DPI, PAD, FONTSIZE_TITLE, pad_fraction, aspect)
+	make_mosiac_plot(raw_image, binarized_image, filtered_image, Local_Density, Image_Coherance, Image_Orientation, vx, vy, filename, LocalSigmaKey, fibrotic_percentage, SpacingKey, ScaleKey, FIGSIZE, DPI, PAD, FONTSIZE_TITLE, pad_fraction, aspect)
 
 	plt.savefig(mosiac_plot_filename)
 	plt.close()
