@@ -244,15 +244,15 @@ def convolve(image, kernel):
 	if k_h > i_h or k_w > i_w:
 		raise ValueError("Kernel size must be smaller than image dimensions")
 
-	# Pad the image with the pixels along the edges
+	# Pad by reflecting the edge values so border pixels are not under-estimated
 	pad_h = int((k_h - 1) / 2)
 	pad_w = int((k_w - 1) / 2)
-	image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
+	image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='reflect')
 
 	# Perform convolution (callers pass pre-normalised kernels; no internal re-normalisation)
-	result = signal.convolve2d(image, kernel, mode='same', boundary='fill', fillvalue=0)
+	result = signal.convolve2d(image, kernel, mode='valid')
 
-	return result[pad_h:-pad_h, pad_w:-pad_w]
+	return result
 
 ########################################################################################
 
