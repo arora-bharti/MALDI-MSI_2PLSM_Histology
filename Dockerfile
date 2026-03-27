@@ -6,11 +6,13 @@ WORKDIR /app
 #   libglib2.0-0  — GLib, needed by opencv-python-headless
 #   libgl1        — OpenGL stub, needed by some opencv operations even in headless mode
 #   libgomp1      — OpenMP, needed by numpy, scikit-image, and tensorflow-cpu
+#   curl          — used by the HEALTHCHECK below
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libgl1 \
     libgomp1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies before copying source so this layer is cached
