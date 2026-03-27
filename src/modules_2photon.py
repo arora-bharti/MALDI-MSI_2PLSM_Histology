@@ -249,11 +249,8 @@ def convolve(image, kernel):
 	pad_w = int((k_w - 1) / 2)
 	image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
 
-	# Get the total number of elements in the kernel
-	total_elements = k_h * k_w
-
-	# Perform convolution
-	result = signal.convolve2d(image, kernel / total_elements, mode='same', boundary='fill', fillvalue=0)
+	# Perform convolution (callers pass pre-normalised kernels; no internal re-normalisation)
+	result = signal.convolve2d(image, kernel, mode='same', boundary='fill', fillvalue=0)
 
 	return result[pad_h:-pad_h, pad_w:-pad_w]
 
@@ -514,7 +511,7 @@ def convert_to_8bit_grayscale(filename, epsilon = 1e-6):
 	
 	img_normalized = img_normalized.astype(np.uint8)
 
-	return img
+	return img_normalized
 
 ########################################################################################
 
@@ -792,7 +789,7 @@ def independent_analysis_function(filename, FilterKey, LocalSigmaKey, ThresholdV
 	# Please refer to: https://opg.optica.org/oe/fulltext.cfm?uri=oe-30-14-25718&id=477526 for more information.
 
 	# Binarize the image
-	binarized_image = binarize_image(filtered_image, radius = BinarizationKey)
+	binarized_image = binarize_image(filtered_image)
 
 	###########################
 

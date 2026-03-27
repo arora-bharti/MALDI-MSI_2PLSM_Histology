@@ -30,6 +30,7 @@ from .modules_2photon import (
     convolve,
     make_mosiac_plot,
     perform_statistical_analysis,
+    load_pandas_dataframe,
     convert_to_8bit_grayscale,
 )
 

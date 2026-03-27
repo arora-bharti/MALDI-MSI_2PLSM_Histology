@@ -15,6 +15,7 @@ Multimodal image analysis pipeline combining **MALDI mass spectrometry imaging (
 This repository contains the source code for:
 - **Collagen texture analysis** from 2PLSM images (coherence, orientation, local density)
 - **Nuclei segmentation and density analysis** from H&E histology images using StarDist
+- **MALDI-MSI analysis** — open-source Python pipeline replacing SCiLS Lab (TIC normalisation, peak alignment, ROC analysis, PCA, bisecting k-means segmentation)
 
 The approach correlates:
 - Collagen fiber coherence (organized vs. chaotic regions) from 2PLSM
@@ -29,7 +30,11 @@ The approach correlates:
 - **Nuclei Segmentation**: Deep learning-based detection using StarDist
 - **Density Heatmaps**: Kernel density estimation of nuclei distribution
 - **Nuclear Morphometry**: Eccentricity and area quantification
+- **Spatial Nuclei Analysis**: Proximity network graphs and Voronoi tessellation
+- **H&E Stain Normalisation**: Ruifrok & Johnston colour deconvolution for batch consistency
+- **MALDI-MSI Pipeline**: imzML import, TIC normalisation, peak detection, ROC analysis, PCA, k-means segmentation
 - **Batch Processing**: Analyze multiple images with progress tracking
+- **Streamlit Web App**: Interactive browser-based interface for all modalities
 - **Publication-ready Visualizations**: 6-panel mosaic plots
 
 ## Repository Structure
@@ -39,24 +44,34 @@ MALDI-MSI_2PLSM_Histology/
 ├── src/                          # Source code modules
 │   ├── __init__.py               # Package initialization
 │   ├── modules_2photon.py        # 2PLSM texture analysis functions
-│   └── modules_histo.py          # Histology/nuclei analysis functions
+│   ├── modules_histo.py          # Histology/nuclei analysis functions
+│   └── modules_maldi.py          # MALDI-MSI analysis functions
 │
 ├── notebooks/                    # Jupyter notebooks
 │   ├── Collagen_textureanalysis.ipynb
 │   ├── Nuclei_segmentation.ipynb
-│   └── Low_high_coherence_percentage.ipynb
+│   ├── Low_high_coherence_percentage.ipynb
+│   ├── Orientation_vectorfield.ipynb
+│   └── MALDI_analysis.ipynb
 │
 ├── scripts/                      # CLI scripts & utilities
 │   ├── analyze_texture.py        # CLI for texture analysis
 │   ├── segment_nuclei.py         # CLI for nuclei segmentation
 │   └── Merging.ijm               # ImageJ macro for overlay
 │
-├── app/                          # Streamlit web app (planned)
-│   └── .streamlit/config.toml
+├── app/                          # Streamlit web app
+│   └── streamlit_app.py
 │
-├── sample_data/                  # Sample images for testing
-├── tests/                        # Unit tests (planned)
+├── .streamlit/                   # Streamlit configuration
+│   └── config.toml
 │
+├── tests/                        # Unit tests (pytest)
+│   ├── conftest.py               # Shared synthetic fixtures
+│   ├── test_texture.py           # Tests for modules_2photon
+│   ├── test_histo.py             # Tests for modules_histo
+│   └── test_maldi.py             # Tests for modules_maldi
+│
+├── sample_data/                  # Sample images
 ├── requirements.txt              # Python dependencies
 ├── CITATION.cff                  # Citation metadata
 ├── LICENSE                       # AGPL-3.0 license
@@ -123,6 +138,12 @@ python scripts/segment_nuclei.py -i data/ -o results/ \
     --nms-thresh 0.4
 ```
 
+#### MALDI-MSI Analysis
+```bash
+# Interactive step-by-step MALDI analysis
+jupyter notebook notebooks/MALDI_analysis.ipynb
+```
+
 ### Interactive Analysis (Notebooks)
 
 For interactive exploration and visualization:
@@ -136,7 +157,27 @@ jupyter notebook notebooks/Nuclei_segmentation.ipynb
 
 # Coherence statistics
 jupyter notebook notebooks/Low_high_coherence_percentage.ipynb
+
+# Orientation vector field overlay
+jupyter notebook notebooks/Orientation_vectorfield.ipynb
 ```
+
+### Streamlit Web App
+
+A browser-based interface covering all three modalities:
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+### Running Tests
+
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
+Tests for modules requiring TensorFlow/StarDist are automatically skipped if those libraries are not installed.
 
 ### Python API
 

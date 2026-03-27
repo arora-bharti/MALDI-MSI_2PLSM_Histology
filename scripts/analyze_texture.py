@@ -36,6 +36,7 @@ from src.modules_2photon import (
     make_filtered_image,
     binarize_image,
     convolve,
+    percentage_area,
     make_image_gradients,
     make_structure_tensor_2d,
     make_coherence,
@@ -94,8 +95,16 @@ def analyze_single_image(image_path, output_dir, filter_sigma, local_density_ker
     orientation = make_orientation(filtered_image, Jxx, Jxy, Jyy, threshold)
     vx, vy = make_vxvy(filtered_image, eigenvectors, threshold)
 
-    # Statistics
-    results = perform_statistical_analysis(os.path.basename(image_path), local_sigma, coherence)
+    # Fibrotic percentage (tissue above density threshold)
+    density_threshold = 0.5
+    local_density_considered = local_density.copy()
+    local_density_considered[local_density_considered < density_threshold] = np.nan
+    fibrotic_percentage = percentage_area(local_density_considered)
+
+    # Statistics — results shape (1, 4): [filename, fibrotic%, low_coherence%, high_coherence%]
+    results = perform_statistical_analysis(
+        os.path.basename(image_path), local_sigma, orientation, coherence, fibrotic_percentage
+    )
 
     # Get filename without extension
     base_name = os.path.splitext(os.path.basename(image_path))[0]
@@ -118,8 +127,9 @@ def analyze_single_image(image_path, output_dir, filter_sigma, local_density_ker
 
     return {
         'filename': os.path.basename(image_path),
-        'low_coherence_pct': results[0, 1],
-        'high_coherence_pct': results[0, 2],
+        'fibrotic_pct': float(results[0, 1]),
+        'low_coherence_pct': float(results[0, 2]),
+        'high_coherence_pct': float(results[0, 3]),
     }
 
 
