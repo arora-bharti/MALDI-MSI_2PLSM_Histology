@@ -1,4 +1,4 @@
-name: Tests
+name: CI
 
 on:
   push:
@@ -24,7 +24,17 @@ jobs:
           pip install --upgrade pip
           pip install numpy pandas scipy scikit-image scikit-learn \
                       matplotlib tifffile Pillow tqdm networkx shapely \
-                      pyimzml pytest
+                      pyimzml pytest \
+                      ruff mypy pip-audit
+
+      - name: Lint (ruff)
+        run: ruff check src/ scripts/ app/
+
+      - name: Type check (mypy)
+        run: mypy src/ --ignore-missing-imports --no-strict-optional --no-error-summary
+
+      - name: Security audit (pip-audit)
+        run: pip-audit
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
