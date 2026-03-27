@@ -562,7 +562,7 @@ def perform_statistical_analysis(filename, LocalSigmaKey, Image_Orientation, Ima
 	Parameters:
 	filename (str): The name of the file being processed.
 	LocalSigmaKey (int): The value of LocalSigmaKey used in the image processing.
-	Image_Orientation (numpy array): An array of orientation data for the image (reserved for future use).
+	Image_Orientation (numpy array): An array of orientation data for the image (accepted for API consistency; not used in the statistical summary).
 	Image_Coherance (numpy array): An array of coherence data for the image.
 	fibrotic_percentage (float): Percentage of fibrotic (collagen-dense) area in the image.
 

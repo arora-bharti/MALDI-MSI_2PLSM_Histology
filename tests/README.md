@@ -1,23 +1,19 @@
 # Tests
 
-This folder is reserved for unit tests.
+Unit tests for all three source modules. All tests use synthetic data — no real patient images required.
 
-## Planned Tests
+## Test files
 
-- `test_texture_analysis.py` - Tests for coherence, orientation calculations
-- `test_nuclei_analysis.py` - Tests for nuclei segmentation functions
-- `test_io.py` - Tests for file I/O operations
+- `test_texture.py` — 18 tests for `modules_2photon` (coherence, orientation, structure tensor, convolution, statistics)
+- `test_histo.py` — 14 tests for `modules_histo` (stain normalisation, nuclei network, Voronoi); skipped gracefully if TensorFlow/StarDist are not installed
+- `test_maldi.py` — 20 tests for `modules_maldi` (TIC normalisation, peak alignment, ion images, PCA, bisecting k-means)
 
 ## Running Tests
 
 ```bash
-# Install pytest
-pip install pytest
+pytest tests/ -v
 
-# Run all tests
-pytest tests/
-
-# Run with coverage
+# With coverage
 pip install pytest-cov
 pytest tests/ --cov=src
 ```

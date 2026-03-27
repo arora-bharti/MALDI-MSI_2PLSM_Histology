@@ -1,17 +1,12 @@
 # Sample Data
 
-This folder should contain sample images for testing and demonstration purposes.
+Place your sample images here for testing and demonstration.
 
-## Expected Files
+## Expected files
 
-### For Collagen Texture Analysis (2PLSM)
-- `sample_2plsm.tif` - 2D grayscale image from two-photon microscopy (SHG signal)
+| File | Modality | Format |
+|------|----------|--------|
+| `sample_2plsm.tif` | Two-photon microscopy (SHG signal) | TIFF, 8-bit or 16-bit grayscale |
+| `sample_histology.tif` | H&E stained histology | TIFF, RGB (3 channels) |
 
-### For Nuclei Segmentation (Histology)
-- `sample_histology.tif` - RGB H&E stained histology image
-
-## File Format Requirements
-
-- **2PLSM images**: TIFF format, 8-bit or 16-bit grayscale
-- **Histology images**: TIFF format, RGB (3 channels)
-
+These files are referenced by the Streamlit app and the Jupyter notebooks as default inputs.

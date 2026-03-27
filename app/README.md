@@ -1,31 +1,15 @@
 # Streamlit Web Application
 
-This folder is reserved for the interactive Streamlit web application.
+Interactive browser-based interface for all three imaging modalities.
 
-## Planned Features
+## Features
 
-- **Tab 1**: Collagen Texture Analysis (2PLSM)
-  - Upload 2D grayscale image
-  - Adjust parameters (filter sigma, local window, structure tensor sigma)
-  - View coherence heatmap, orientation map, density map
-  - Download results
-
-- **Tab 2**: Nuclei Segmentation (Histology)
-  - Upload H&E stained image
-  - Adjust StarDist detection thresholds
-  - View labeled nuclei, density heatmap
-  - Download results
-
-- **Tab 3**: Batch Processing
-  - Process multiple images at once
-  - Download zipped results
+- **Tab 1 — Collagen Texture Analysis (2PLSM)**: Upload a grayscale SHG image, adjust filter sigma, local window, and structure tensor parameters, view coherence heatmap and orientation map, download results CSV.
+- **Tab 2 — Nuclei Segmentation (Histology)**: Upload an H&E image, adjust StarDist detection thresholds, view labelled nuclei and density heatmap, download results.
+- **Tab 3 — Batch Processing**: Upload multiple images, run texture analysis across all, download a combined results table.
 
 ## Running the App
 
 ```bash
-# Install Streamlit
-pip install streamlit
-
-# Run the app
 streamlit run app/streamlit_app.py
 ```
