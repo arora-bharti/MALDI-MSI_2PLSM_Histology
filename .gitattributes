@@ -1,0 +1,9 @@
+*.ipynb linguist-documentation
+
+# Notebooks are JSON: treat them as text so diffs and merges behave sensibly.
+*.ipynb text eol=lf
+
+# Example images are binary; never try to convert line endings in them.
+*.tif binary
+*.tiff binary
+*.png binary
