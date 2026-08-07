@@ -25,7 +25,10 @@ jobs:
         # both lightweight and TensorFlow-free, and without them the histology
         # tests silently skip instead of running.
         run: |
-          pip install --upgrade pip
+          # setuptools and wheel are upgraded too, not just pip: the runner's
+          # preinstalled setuptools is old enough to be flagged by pip-audit below,
+          # even though nothing here depends on it directly.
+          pip install --upgrade pip setuptools wheel
           pip install numpy pandas scipy scikit-image scikit-learn \
                       matplotlib tifffile Pillow tqdm networkx shapely \
                       pyimzml csbdeep opencv-python-headless pytest \
@@ -35,12 +38,7 @@ jobs:
         run: mypy src/ --ignore-missing-imports --no-strict-optional --no-error-summary
 
       - name: Security audit (pip-audit)
-        # CVE-2026-4539: ReDoS in pygments AdlLexer (archetype.py).
-        # Ignored because: (1) this app never processes ADL files so the
-        # vulnerable code path is never reached, (2) no patched release exists
-        # yet (fix merged upstream, awaiting pygments >2.19.2).
-        # Revisit when a new pygments release is available.
-        run: pip-audit --ignore-vuln CVE-2026-4539
+        run: pip-audit
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
