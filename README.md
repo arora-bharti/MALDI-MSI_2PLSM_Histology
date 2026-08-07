@@ -4,6 +4,9 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs44303--024--00041--3-blue)](https://doi.org/10.1038/s44303-024-00041-3)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://maldi-2plsm-histology.streamlit.app/)
+
+**▶ Try it in your browser: [maldi-2plsm-histology.streamlit.app](https://maldi-2plsm-histology.streamlit.app/)** — upload any sample image and run the analysis.
 
 Multimodal image analysis pipeline combining **MALDI mass spectrometry imaging**, **two-photon laser scanning microscopy (2PLSM)**, and **H&E histology** to characterize spatial heterogeneity in colorectal cancer tissue. Please check the publication in *npj Imaging* (2024).
 
@@ -72,7 +75,9 @@ docker run -p 8501:8501 maldi-pipeline
 
 ### Streamlit web app
 
-Run it locally from the repository root:
+A hosted version runs at **[maldi-2plsm-histology.streamlit.app](https://maldi-2plsm-histology.streamlit.app/)**.
+
+To run it locally instead, from the repository root:
 
 ```bash
 streamlit run app/streamlit_app.py
