@@ -1,9 +1,23 @@
+# Streamlit configuration.
+# Streamlit reads .streamlit/config.toml relative to the directory you launch
+# from, i.e. the repository root. There must be exactly one of these files —
+# a second copy under app/ is never read and only causes confusion.
+
 [theme]
 base = "light"
+primaryColor = "#FF6B6B"
 
 [server]
-maxUploadSize = 500
-enableCORS = false
+# Whole-slide TIFFs are large, but Streamlit Community Cloud caps uploads well
+# below this anyway; 200 MB is a realistic ceiling for a hosted demo.
+maxUploadSize = 200
+
+# enableCORS is deliberately left at its default (true). Setting it to false
+# silently disables XSRF protection, and Streamlit Cloud warns about the
+# combination on every start.
+
+[browser]
+gatherUsageStats = false
 
 [runner]
 fastReruns = true

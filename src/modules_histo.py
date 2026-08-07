@@ -29,7 +29,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # must be set before TensorFlow/StarDi
 
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
 import pandas as pd
 
 from PIL import Image
@@ -37,8 +36,16 @@ from tqdm.auto import tqdm
 from skimage.measure import regionprops
 from sklearn.neighbors import KernelDensity
 from scipy.ndimage import gaussian_filter
-from stardist import random_label_cmap
+
+# csbdeep is imported at module level because MyNormalizer subclasses Normalizer,
+# which must exist when the class body is executed. It is lightweight and does
+# not import TensorFlow.
 from csbdeep.data import Normalizer, normalize_mi_ma
+
+# cv2 and stardist are imported inside the two functions that use them, so that
+# importing this module does not require the full segmentation stack. Everything
+# else here (stain normalisation, density maps, nuclei networks, Voronoi) is
+# plain numpy/scipy/skimage and stays usable and testable without them.
 
 Image.MAX_IMAGE_PIXELS = None  # must be set before any image is opened
 
@@ -109,19 +116,32 @@ def weighted_kde_density_map(nucleus_mask, bandwidth = 'auto', kernel = 'gaussia
 
 
 def normalize_array(arr):
-            # Find the 1st and 99th percentiles
-            p1, p99 = np.percentile(arr, [1, 99])
+	"""
+	Rescale an array to the 0-255 range using its 1st and 99th percentiles.
 
-            # Subtract the 1st percentile from all elements
-            arr_normalized = arr - p1
+	Percentiles rather than min/max, so a few hot or dead pixels cannot squash
+	the rest of the image into a narrow band.
 
-            # Divide all elements by the difference between the 99th and 1st percentiles
-            arr_normalized /= (p99 - p1)
+	Parameters:
+		arr (np.ndarray): Input array.
 
-            # Multiply all elements by 255
-            arr_normalized *= 255
+	Returns:
+		np.ndarray: Float array clipped to [0, 255].
+	"""
+	# Find the 1st and 99th percentiles
+	p1, p99 = np.percentile(arr, [1, 99])
 
-            return arr_normalized
+	# Guard against a flat image, where p99 == p1 would divide by zero
+	spread = p99 - p1
+	if spread <= 0:
+		return np.zeros_like(arr, dtype=float)
+
+	arr_normalized = (arr - p1) / spread * 255
+
+	# Values outside the 1st-99th percentile range fall outside 0-255, so clip
+	# them. Without this the function returns negative intensities, which is
+	# not a valid 8-bit grayscale range.
+	return np.clip(arr_normalized, 0.0, 255.0)
 
 
 ##########################################################################
@@ -148,6 +168,8 @@ def mean_filter(labels, size = 0.1):
 
 	"""
 	
+	import cv2  # imported here so the module can be used without OpenCV installed
+
 	binary_image = np.where(labels > 0, 255, 0).astype(np.uint8)
 
 	# Calculate window size as 10% of the minimum dimension of the input array
@@ -235,9 +257,14 @@ from matplotlib.colors import ListedColormap
 
 def make_mosaic_and_save(img, labels, num_clusters, Local_Density_mean_filter, Local_Packing, eccentricity_binned_image, area_binned_image, filename, output_folder):
 	
+	from stardist import random_label_cmap  # imported here to keep StarDist optional
+
 	random_cmap = random_label_cmap()
 
-	fig, axs = plt.subplots(2, 3, figsize=(36, 24))
+	# 18x12 at 150 dpi gives a ~2700x1800 mosaic — still comfortably sharp for a
+	# 6-panel overview, but ~16x fewer pixels than 36x24 at 300 dpi, which produced
+	# an unwieldy 8591x5692 / 16 MB PNG for a 1024x1024 input.
+	fig, axs = plt.subplots(2, 3, figsize=(18, 12))
 
 	# Define the custom colormap
 	colors = ['black', 'red', 'green', 'yellow', 'orange', 'cyan', 'lime']
@@ -269,7 +296,7 @@ def make_mosaic_and_save(img, labels, num_clusters, Local_Density_mean_filter, L
 	# Save the mosaic as .png in the results folder
 #     plt.subplots_adjust(wspace=0.4, hspace=0.4)
 	output_path = os.path.join(output_folder, filename.replace('.tif', '_mosaic.png'))
-	plt.savefig(output_path, dpi=300, bbox_inches='tight')
+	plt.savefig(output_path, dpi=150, bbox_inches='tight')
 	plt.close()
 
 	print(f"Mosaic saved to {output_path}")

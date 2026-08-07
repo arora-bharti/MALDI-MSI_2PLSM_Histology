@@ -1,0 +1,12 @@
+# Extra dependencies for running the notebooks and the test suite.
+# Install both files:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# These are deliberately kept out of requirements.txt so that a Streamlit
+# Community Cloud deployment does not install JupyterLab it will never use.
+
+-r requirements.txt
+
+pytest==9.1.1
+jupyterlab==4.6.2
+nbconvert==7.17.1

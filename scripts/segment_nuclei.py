@@ -77,21 +77,26 @@ def segment_single_image(image_path, output_dir, model, prob_thresh, nms_thresh,
     mi, ma = np.percentile(img, norm_percentiles)
     normalizer = MyNormalizer(mi, ma)
 
-    # Configure model
-    model.config.prob_thresh = prob_thresh
-    model.config.nms_thresh = nms_thresh
-
-    # Predict
+    # Predict.
+    # The thresholds MUST be passed into the predict call. Assigning
+    # model.config.prob_thresh has no effect: StarDist reads model.thresholds,
+    # which is loaded from thresholds.json, so the assignment is silently ignored
+    # and the model's built-in 0.6925 is used instead — which detects roughly 40%
+    # fewer nuclei than the documented default of 0.4.
     with redirect_stdout(open(os.devnull, "w")):
         if img.ndim == 3:  # RGB image
             labels, polys = model.predict_instances_big(
                 img, axes='YXC', block_size=1000,
                 min_overlap=144, context=128,
                 normalizer=normalizer, n_tiles=(2, 2, 1),
+                prob_thresh=prob_thresh, nms_thresh=nms_thresh,
                 show_progress=False
             )
         else:  # Grayscale
-            labels, polys = model.predict_instances(img, normalizer=normalizer)
+            labels, polys = model.predict_instances(
+                img, normalizer=normalizer,
+                prob_thresh=prob_thresh, nms_thresh=nms_thresh
+            )
 
     labels = fill_label_holes(labels)
 

@@ -465,10 +465,12 @@ def make_vxvy(input_image, eigenvectors, threshold_value):
 	if not isinstance(threshold_value, (float, int)):
 		raise ValueError("Threshold value must be a number")
 
-	vx = eigenvectors[..., 0][:, :, 0]
+	# .copy() is essential: without it, vx and vy are views into `eigenvectors` and the
+	# NaN assignments below would silently overwrite the caller's eigenvector array.
+	vx = eigenvectors[..., 0][:, :, 0].copy()
 	vx[input_image < threshold_value] = np.nan
 
-	vy = eigenvectors[..., 0][:, :, 1]
+	vy = eigenvectors[..., 0][:, :, 1].copy()
 	vy[input_image < threshold_value] = np.nan
 
 	return vx, vy
@@ -566,13 +568,24 @@ def perform_statistical_analysis(filename, LocalSigmaKey, Image_Orientation, Ima
 	Returns:
 	numpy.ndarray: 2D array of shape (1, 4) containing
 		[filename, fibrotic_percentage, low_coherance, high_coherance].
+
+	Notes:
+	Coherence is split at a FIXED value of 0.5, matching the definition used in the
+	paper (0-0.5 = chaotic, 0.5-1 = organised). Passing bins=2 without explicit edges
+	would place the boundary at the midpoint of each image's own value range, which
+	makes the result depend on the other pixels in the frame and prevents images from
+	being compared with one another.
 	"""
 
-	# Calculate low and high coherance values using a 2-bin histogram
-	Image_Coherance_temp = Image_Coherance[~np.isnan(Image_Coherance)].copy()
-	histogram_coherance = plt.hist(Image_Coherance_temp, bins=2, weights=np.ones(len(Image_Coherance_temp))/len(Image_Coherance_temp))
-	plt.close()
-	low_coherance, high_coherance = np.round(100 * histogram_coherance[0], 2)
+	# Calculate low and high coherance percentages, split at a fixed value of 0.5
+	Image_Coherance_temp = Image_Coherance[~np.isnan(Image_Coherance)]
+
+	if Image_Coherance_temp.size == 0:
+		# No pixels passed the intensity threshold, so there is nothing to summarise
+		low_coherance, high_coherance = np.nan, np.nan
+	else:
+		counts, _ = np.histogram(np.clip(Image_Coherance_temp, 0.0, 1.0), bins=[0.0, 0.5, 1.0])
+		low_coherance, high_coherance = np.round(100 * counts / Image_Coherance_temp.size, 2)
 
 	# Combine the results into a single numpy array
 	results_array = np.asarray((filename, fibrotic_percentage, low_coherance, high_coherance))

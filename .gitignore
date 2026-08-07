@@ -68,6 +68,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.msi_2plsm_histo/
 
 # Spyder project settings
 .spyderproject
@@ -98,7 +99,17 @@ Thumbs.db
 *.tif
 *.tiff
 *.png
+
+# ...but always keep the small example files shipped in sample_data/.
+# Without these negations git silently ignores anything dropped into sample_data/
+# and `git add` reports no error, so the examples never actually reach the repo.
 !sample_data/README.md
+!sample_data/*.tif
+!sample_data/*.tiff
+!sample_data/*.png
+!sample_data/**/*.tif
+!sample_data/**/*.tiff
+!sample_data/**/*.png
 
 # Output directories
 output_data/

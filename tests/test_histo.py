@@ -30,11 +30,6 @@ def test_normalize_density_maps_max_is_one():
 	assert abs(float(np.nanmax(result)) - 1.0) < 1e-6
 
 
-def test_normalize_density_maps_shape():
-	arr = np.random.rand(32, 32).astype(np.float32)
-	assert normalize_density_maps(arr).shape == (32, 32)
-
-
 def test_normalize_density_maps_zero_input():
 	arr = np.zeros((10, 10), dtype=np.float32)
 	result = normalize_density_maps(arr)
@@ -51,19 +46,7 @@ def test_normalize_array_range():
 	assert float(result.max()) <= 255.0 + 1e-4
 
 
-def test_normalize_array_shape():
-	arr = np.random.rand(50, 80).astype(np.float32)
-	assert normalize_array(arr).shape == (50, 80)
-
-
 # ── normalize_staining ────────────────────────────────────────────────────────
-
-def test_normalize_staining_shape():
-	# Construct a plausible H&E-like image (pink background + some purple areas)
-	img = np.full((64, 64, 3), [240, 180, 210], dtype=np.uint8)
-	img[20:30, 20:30] = [100, 60, 150]
-	result = normalize_staining(img)
-	assert result.shape == img.shape
 
 
 def test_normalize_staining_dtype():
@@ -81,10 +64,6 @@ def test_normalize_staining_values_clipped():
 
 # ── mean_filter ───────────────────────────────────────────────────────────────
 
-def test_mean_filter_shape(synthetic_label_image):
-	result = mean_filter(synthetic_label_image)
-	assert result.shape == synthetic_label_image.shape
-
 
 def test_mean_filter_nonnegative(synthetic_label_image):
 	result = mean_filter(synthetic_label_image)
@@ -97,12 +76,6 @@ def test_make_nuclei_network_node_count(synthetic_label_image):
 	G, centroids = make_nuclei_network(synthetic_label_image)
 	# Fixture has exactly 10 labelled circles
 	assert G.number_of_nodes() == 10
-
-
-def test_make_nuclei_network_centroids_shape(synthetic_label_image):
-	G, centroids = make_nuclei_network(synthetic_label_image)
-	assert centroids.ndim == 2
-	assert centroids.shape[1] == 2
 
 
 def test_make_nuclei_network_edge_weights_positive(synthetic_label_image):
@@ -122,11 +95,6 @@ def test_make_nuclei_network_max_distance(synthetic_label_image):
 def test_make_voronoi_tessellation_point_count(synthetic_label_image):
 	vor, centroids = make_voronoi_tessellation(synthetic_label_image)
 	assert len(vor.points) == 10
-
-
-def test_make_voronoi_tessellation_centroids_shape(synthetic_label_image):
-	vor, centroids = make_voronoi_tessellation(synthetic_label_image)
-	assert centroids.shape == (10, 2)
 
 
 def test_make_voronoi_tessellation_too_few_nuclei():

@@ -3,12 +3,12 @@
 [![CI](https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology/actions/workflows/tests.yml/badge.svg)](https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology/actions/workflows/tests.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs44303--024--00041--3-blue)](https://doi.org/10.1038/s44303-024-00041-3)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-Multimodal image analysis pipeline combining **MALDI mass spectrometry imaging**, **two-photon laser scanning microscopy (2PLSM)**, and **H&E histology** to characterize spatial heterogeneity in colorectal cancer tissue. Accompanies the publication in *npj Imaging* (2024).
+Multimodal image analysis pipeline combining **MALDI mass spectrometry imaging**, **two-photon laser scanning microscopy (2PLSM)**, and **H&E histology** to characterize spatial heterogeneity in colorectal cancer tissue. Please check the publication in *npj Imaging* (2024).
 
 ![Imaging Protocol](https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs44303-024-00041-3/MediaObjects/44303_2024_41_Fig1_HTML.png)
-*Figure 1: Imaging protocol for correlation of 2PLSM, MALDI-MSI, and histology.*
+*Imaging protocol for correlation of 2PLSM, MALDI-MSI, and histology.*
 
 ---
 
@@ -26,7 +26,7 @@ Multimodal image analysis pipeline combining **MALDI mass spectrometry imaging**
 - Proximity network graphs and Voronoi tessellation of nuclei
 
 **MALDI-MSI**
-- Open-source pipeline replacing SCiLS Lab: imzML import, TIC normalisation, peak alignment
+- Open-source pipeline to provide an alternative to SCiLS Lab: imzML import, TIC normalisation, peak alignment
 - ROC analysis per m/z, discriminative ion selection
 - PCA and bisecting k-means spatial segmentation
 - QuPath annotation import (GeoJSON)
@@ -35,11 +35,29 @@ Multimodal image analysis pipeline combining **MALDI mass spectrometry imaging**
 
 ## Installation
 
+Requires **Python 3.10 or newer**.
+
 ```bash
 git clone https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology.git
 cd MALDI-MSI_2PLSM_Histology
-python -m venv venv && source venv/bin/activate
+python3 -m venv .msi_2plsm_histo && source .msi_2plsm_histo/bin/activate
 pip install -r requirements.txt
+
+# ...plus JupyterLab and pytest if you want to run the notebooks or tests
+pip install -r requirements-dev.txt
+```
+
+Versions in `requirements.txt` are pinned to a verified combination. The correct
+TensorFlow build is selected automatically for your platform: `tensorflow` on macOS
+(Apple Silicon has no `tensorflow-cpu` wheel), `tensorflow-cpu` on Linux (plain
+`tensorflow` there pulls in ~2 GB of CUDA packages that are useless without a GPU).
+
+**macOS note:** StarDist downloads its pretrained model over HTTPS. Python installed
+from python.org ships without CA certificates, so run this once or the download fails
+with `CERTIFICATE_VERIFY_FAILED`:
+
+```bash
+/Applications/Python\ 3.10/Install\ Certificates.command
 ```
 
 **Or with Docker** (no install required — reproduces the exact analysis environment):
@@ -53,9 +71,18 @@ docker run -p 8501:8501 maldi-pipeline
 ## Usage
 
 ### Streamlit web app
+
+Run it locally from the repository root:
+
 ```bash
 streamlit run app/streamlit_app.py
 ```
+
+Upload a grayscale SHG TIFF for collagen texture analysis, or an RGB H&E TIFF for
+nuclei segmentation; both tabs show the resulting maps and offer a CSV download.
+Example images are in `sample_data/`.
+
+ 
 
 ### Command-line scripts
 ```bash
@@ -76,11 +103,16 @@ python scripts/segment_nuclei.py -i histology.tif -o results/
 | `Orientation_vectorfield.ipynb` | Fibre orientation quiver overlays |
 | `MALDI_analysis.ipynb` | Full MALDI-MSI pipeline |
 
+All notebooks read from `sample_data/` by default and write their results to
+`output_data/`.
+
 ### Tests
+
 ```bash
-pytest tests/ -v
+pytest tests/
 ```
-Tests for TensorFlow/StarDist-dependent functions are skipped automatically if those libraries are not installed.
+
+Unit tests cover the texture, histology and MALDI modules.
 
 ---
 
@@ -143,28 +175,3 @@ Funded by: EU Horizon 2020 Marie Sklodowska-Curie (No 857894 – CAST), Ministry
 
 ---
 
-<details>
-<summary>Repository structure</summary>
-
-```
-MALDI-MSI_2PLSM_Histology/
-├── src/
-│   ├── modules_2photon.py     # 2PLSM texture analysis
-│   ├── modules_histo.py       # Histology / nuclei analysis
-│   ├── modules_maldi.py       # MALDI-MSI analysis
-│   └── __init__.py
-├── notebooks/                 # Jupyter notebooks (one per modality)
-├── scripts/
-│   ├── analyze_texture.py     # CLI for texture analysis
-│   ├── segment_nuclei.py      # CLI for nuclei segmentation
-│   └── Merging.ijm            # ImageJ macro for image overlay
-├── app/
-│   └── streamlit_app.py       # Interactive web app
-├── tests/                     # pytest unit tests (52 tests, synthetic data)
-├── sample_data/               # Place sample .tif images here
-├── Dockerfile                 # Reproducible environment
-├── requirements.txt
-└── CITATION.cff
-```
-
-</details>

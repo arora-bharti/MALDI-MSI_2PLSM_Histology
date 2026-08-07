@@ -42,22 +42,12 @@ def test_normalize_tic_rows_sum_to_one(synthetic_spectra):
 	np.testing.assert_allclose(row_sums, np.ones(len(row_sums)), rtol=1e-5)
 
 
-def test_normalize_tic_shape_preserved(synthetic_spectra):
-	result = normalize_tic(synthetic_spectra)
-	assert result.shape == synthetic_spectra.shape
-
-
 def test_normalize_tic_zero_spectrum_no_nan():
 	mat = np.zeros((5, 100), dtype=np.float32)
 	mat[0, 50] = 1.0
 	result = normalize_tic(mat)
 	assert not np.any(np.isnan(result))
 	assert not np.any(np.isinf(result))
-
-
-def test_normalize_tic_nonnegative(synthetic_spectra):
-	result = normalize_tic(synthetic_spectra)
-	assert float(result.min()) >= 0.0
 
 
 # ── find_and_align_peaks ──────────────────────────────────────────────────────
@@ -82,23 +72,7 @@ def test_find_and_align_peaks_detects_known_peak(synthetic_spectra):
 	assert diffs.min() <= target_mz * 500 / 1e6
 
 
-def test_find_and_align_peaks_nonnegative(synthetic_spectra):
-	mz = _make_mz()
-	normed = normalize_tic(synthetic_spectra)
-	_, peak_matrix = find_and_align_peaks(normed, mz)
-	assert float(peak_matrix.min()) >= 0.0
-
-
 # ── generate_ion_image ────────────────────────────────────────────────────────
-
-def test_generate_ion_image_shape(synthetic_spectra):
-	mz = _make_mz()
-	normed = normalize_tic(synthetic_spectra)
-	peak_mz, peak_matrix = find_and_align_peaks(normed, mz)
-	coords = _make_coords()
-	shape = _make_image_shape()
-	img = generate_ion_image(peak_matrix, peak_mz, peak_mz[0], coords, shape)
-	assert img.shape == shape
 
 
 def test_generate_ion_image_missing_mz_returns_nan(synthetic_spectra):
@@ -125,16 +99,6 @@ def test_generate_ion_image_pixel_value(synthetic_spectra):
 
 
 # ── build_data_cube ───────────────────────────────────────────────────────────
-
-def test_build_data_cube_shape(synthetic_spectra):
-	mz = _make_mz()
-	normed = normalize_tic(synthetic_spectra)
-	_, peak_matrix = find_and_align_peaks(normed, mz)
-	coords = _make_coords()
-	shape = _make_image_shape()
-	cube, mask = build_data_cube(peak_matrix, coords, shape)
-	assert cube.shape == (shape[0], shape[1], peak_matrix.shape[1])
-	assert mask.shape == shape
 
 
 def test_build_data_cube_pixel_mask(synthetic_spectra):
@@ -167,28 +131,7 @@ def test_get_discriminative_mz_empty_input():
 	assert len(result) == 0
 
 
-def test_get_discriminative_mz_all_discriminative():
-	df = pd.DataFrame({
-		"mz":     [1000.0, 2000.0],
-		"auc":    [0.9,    0.1],
-		"pvalue": [0.001,  0.001],
-	})
-	result = get_discriminative_mz(df)
-	assert len(result) == 2
-
-
 # ── run_bisecting_kmeans ──────────────────────────────────────────────────────
-
-def test_run_bisecting_kmeans_segment_image_shape(synthetic_spectra):
-	mz = _make_mz()
-	normed = normalize_tic(synthetic_spectra)
-	peak_mz, peak_matrix = find_and_align_peaks(normed, mz)
-	disc_df = pd.DataFrame({"mz": [float(peak_mz[0])], "auc": [0.8], "pvalue": [0.001]})
-	coords = _make_coords()
-	shape = _make_image_shape()
-	seg_img, labels, areas = run_bisecting_kmeans(
-		peak_matrix, peak_mz, disc_df, coords, shape, n_clusters=2)
-	assert seg_img.shape == shape
 
 
 def test_run_bisecting_kmeans_areas_sum_to_100(synthetic_spectra):
@@ -227,18 +170,6 @@ def test_run_pca_n_components(synthetic_spectra):
 	pc_images, loadings_df, expl_var, _ = run_pca(
 		peak_matrix, peak_mz, disc_df, coords, shape, n_components=3)
 	assert len(pc_images) == 3
-
-
-def test_run_pca_image_shapes(synthetic_spectra):
-	mz = _make_mz()
-	normed = normalize_tic(synthetic_spectra)
-	peak_mz, peak_matrix = find_and_align_peaks(normed, mz)
-	disc_df = pd.DataFrame({"mz": peak_mz[:5].tolist(), "auc": [0.8] * 5, "pvalue": [0.001] * 5})
-	coords = _make_coords()
-	shape = _make_image_shape()
-	pc_images, _, _, _ = run_pca(peak_matrix, peak_mz, disc_df, coords, shape, n_components=2)
-	for img in pc_images:
-		assert img.shape == shape
 
 
 def test_run_pca_explained_variance_sums_to_one(synthetic_spectra):

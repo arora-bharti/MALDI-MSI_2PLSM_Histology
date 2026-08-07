@@ -20,11 +20,15 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
+        # Deliberately NOT installing from requirements.txt: that pulls TensorFlow
+        # (~270 MB) which no test needs. csbdeep and opencv-python-headless are
+        # both lightweight and TensorFlow-free, and without them the histology
+        # tests silently skip instead of running.
         run: |
           pip install --upgrade pip
           pip install numpy pandas scipy scikit-image scikit-learn \
                       matplotlib tifffile Pillow tqdm networkx shapely \
-                      pyimzml pytest \
+                      pyimzml csbdeep opencv-python-headless pytest \
                       mypy pip-audit
 
       - name: Type check (mypy)

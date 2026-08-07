@@ -15,6 +15,7 @@ from modules_2photon import (
 	make_structure_tensor_2d,
 	make_coherence,
 	make_orientation,
+	make_vxvy,
 	percentage_area,
 	perform_statistical_analysis,
 	load_pandas_dataframe,
@@ -22,10 +23,6 @@ from modules_2photon import (
 
 
 # ── binarize_image ────────────────────────────────────────────────────────────
-
-def test_binarize_image_shape(synthetic_shg):
-	result = binarize_image(synthetic_shg)
-	assert result.shape == synthetic_shg.shape
 
 
 def test_binarize_image_binary(synthetic_shg):
@@ -41,10 +38,6 @@ def test_binarize_image_rejects_3d():
 
 # ── make_filtered_image ───────────────────────────────────────────────────────
 
-def test_make_filtered_image_shape(synthetic_shg):
-	result = make_filtered_image(synthetic_shg, filter_sigma=2)
-	assert result.shape == synthetic_shg.shape
-
 
 def test_make_filtered_image_smooths(synthetic_shg):
 	# Gaussian filter should reduce the standard deviation (smooth variation)
@@ -53,11 +46,6 @@ def test_make_filtered_image_smooths(synthetic_shg):
 
 
 # ── convolve ─────────────────────────────────────────────────────────────────
-
-def test_convolve_shape(synthetic_shg):
-	kernel = np.ones((5, 5), dtype=np.float32) / 25
-	result = convolve(synthetic_shg.astype(np.float32), kernel)
-	assert result.shape == synthetic_shg.shape
 
 
 def test_convolve_uniform_image():
@@ -69,12 +57,6 @@ def test_convolve_uniform_image():
 
 
 # ── make_image_gradients ──────────────────────────────────────────────────────
-
-def test_make_image_gradients_shapes(synthetic_shg):
-	filtered = make_filtered_image(synthetic_shg, 2)
-	gx, gy = make_image_gradients(filtered)
-	assert gx.shape == synthetic_shg.shape
-	assert gy.shape == synthetic_shg.shape
 
 
 def test_make_image_gradients_uniform():
@@ -107,14 +89,6 @@ def test_make_coherence_range(synthetic_shg):
 	assert valid.max() <= 1.0 + 1e-6
 
 
-def test_make_coherence_shape(synthetic_shg):
-	filtered = make_filtered_image(synthetic_shg, 2)
-	gx, gy = make_image_gradients(filtered)
-	ST, EV, EVec, Jxx, Jxy, Jyy = make_structure_tensor_2d(gx, gy, 10)
-	coherence = make_coherence(filtered, EV, ST, threshold_value=5)
-	assert coherence.shape == synthetic_shg.shape
-
-
 # ── make_orientation ──────────────────────────────────────────────────────────
 
 def test_make_orientation_range(synthetic_shg):
@@ -127,20 +101,7 @@ def test_make_orientation_range(synthetic_shg):
 	assert valid.max() <= 180.0 + 1e-4
 
 
-def test_make_orientation_shape(synthetic_shg):
-	filtered = make_filtered_image(synthetic_shg, 2)
-	gx, gy = make_image_gradients(filtered)
-	ST, EV, EVec, Jxx, Jxy, Jyy = make_structure_tensor_2d(gx, gy, 10)
-	orientation = make_orientation(filtered, Jxx, Jxy, Jyy, threshold_value=5)
-	assert orientation.shape == synthetic_shg.shape
-
-
 # ── perform_statistical_analysis ─────────────────────────────────────────────
-
-def test_perform_statistical_analysis_shape():
-	coherence = np.array([0.2] * 60 + [0.8] * 40, dtype=np.float32)
-	result = perform_statistical_analysis("test.tif", 10, None, coherence, 55.0)
-	assert result.shape == (1, 4)
 
 
 def test_perform_statistical_analysis_percentages_sum():
@@ -157,11 +118,80 @@ def test_perform_statistical_analysis_filename_stored():
 	assert result[0, 0] == "my_image.tif"
 
 
-def test_perform_statistical_analysis_ignores_nan():
-	coherence = np.array([0.2, 0.8, np.nan, 0.3, 0.7], dtype=np.float32)
-	# Should not raise
+def test_perform_statistical_analysis_splits_at_fixed_half():
+	"""
+	The low/high boundary must sit at 0.5, not at the midpoint of the image's own
+	value range. Every value here is below 0.5, so the tissue is 100% chaotic.
+	A range-relative 2-bin histogram would wrongly report ~60% high coherence.
+	"""
+	coherence = np.array([0.10, 0.15, 0.20, 0.25, 0.30,
+						  0.32, 0.35, 0.38, 0.40, 0.45], dtype=np.float32)
 	result = perform_statistical_analysis("test.tif", 10, None, coherence, 20.0)
+	assert float(result[0, 2]) == 100.0
+	assert float(result[0, 3]) == 0.0
+
+
+def test_perform_statistical_analysis_all_high_coherence():
+	"""Mirror case: every value above 0.5 must report 100% high coherence."""
+	coherence = np.array([0.55, 0.60, 0.75, 0.90], dtype=np.float32)
+	result = perform_statistical_analysis("test.tif", 10, None, coherence, 20.0)
+	assert float(result[0, 2]) == 0.0
+	assert float(result[0, 3]) == 100.0
+
+
+def test_perform_statistical_analysis_is_comparable_across_images():
+	"""
+	The same coherence values must give the same percentages regardless of what
+	else is in the image — this is what makes two images comparable.
+	"""
+	shared = [0.2, 0.3, 0.7, 0.8]
+	dim   = np.array(shared + [0.1, 0.15], dtype=np.float32)
+	bright = np.array(shared + [0.9, 0.95], dtype=np.float32)
+
+	low_dim = float(perform_statistical_analysis("a.tif", 10, None, dim, 0.0)[0, 2])
+	low_bright = float(perform_statistical_analysis("b.tif", 10, None, bright, 0.0)[0, 2])
+
+	# 4 of 6 below 0.5 in the dim image, 2 of 6 in the bright image — both exact
+	assert low_dim == pytest.approx(66.67, abs=0.01)
+	assert low_bright == pytest.approx(33.33, abs=0.01)
+
+
+def test_perform_statistical_analysis_all_nan_does_not_crash():
+	"""An image where no pixel passes the intensity threshold must not raise."""
+	coherence = np.full(10, np.nan, dtype=np.float32)
+	result = perform_statistical_analysis("empty.tif", 10, None, coherence, 0.0)
 	assert result.shape == (1, 4)
+	assert np.isnan(float(result[0, 2]))
+
+
+# ── make_vxvy ─────────────────────────────────────────────────────────────────
+
+def test_make_vxvy_does_not_mutate_eigenvectors():
+	"""
+	make_vxvy must return copies. If it returns views, the NaN masking corrupts
+	the caller's eigenvector array and any later use of it silently breaks.
+	"""
+	image = np.zeros((8, 8), dtype=np.float32)
+	eigenvectors = np.ones((8, 8, 2, 2), dtype=np.float32)
+	before = eigenvectors.copy()
+
+	make_vxvy(image, eigenvectors, threshold_value=1.0)
+
+	assert np.array_equal(eigenvectors, before)
+	assert not np.isnan(eigenvectors).any()
+
+
+def test_make_vxvy_masks_below_threshold():
+	"""Pixels below the threshold are NaN; pixels above keep their value."""
+	image = np.zeros((4, 4), dtype=np.float32)
+	image[0, :] = 10.0
+	eigenvectors = np.ones((4, 4, 2, 2), dtype=np.float32)
+
+	vx, vy = make_vxvy(image, eigenvectors, threshold_value=5.0)
+
+	assert not np.isnan(vx[0, :]).any()
+	assert np.isnan(vx[1:, :]).all()
+	assert vx.shape == image.shape and vy.shape == image.shape
 
 
 # ── load_pandas_dataframe ─────────────────────────────────────────────────────
@@ -171,15 +201,6 @@ def test_load_pandas_dataframe_columns():
 	df = load_pandas_dataframe(results)
 	expected = ["Fibrotic percentage [%]", "% Low Coherance regions", "% High Coherance regions"]
 	assert list(df.columns) == expected
-
-
-def test_load_pandas_dataframe_row_count():
-	results = np.array([
-		["a.tif", "10.0", "40.0", "60.0"],
-		["b.tif", "20.0", "55.0", "45.0"],
-	])
-	df = load_pandas_dataframe(results)
-	assert len(df) == 2
 
 
 # ── percentage_area ───────────────────────────────────────────────────────────

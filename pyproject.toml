@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maldi-msi-2plsm-histology"
+version = "1.0.0"
+description = "Multimodal image analysis combining MALDI-MSI, two-photon microscopy and H&E histology in colorectal cancer tissue"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0-or-later" }
+keywords = [
+    "MALDI-MSI", "two-photon microscopy", "2PLSM", "histology",
+    "colorectal cancer", "image analysis", "nuclei segmentation",
+    "texture analysis", "collagen coherence", "StarDist", "structure tensor",
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+
+[[project.authors]]
+name = "Bharti Arora"
+email = "bharti.arora@mpinat.mpg.de"
+
+[[project.authors]]
+name = "Ajinkya Kulkarni"
+email = "ajinkya.kulkarni@mpinat.mpg.de"
+
+# Runtime dependencies are listed unpinned here so the package stays installable
+# alongside other projects. The exact verified combination lives in
+# requirements.txt — install that for a reproducible environment.
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "Pillow>=9",
+    "opencv-python-headless>=4.5",
+    "scikit-image>=0.20",
+    "tifffile>=2023.1.1",
+    "scikit-learn>=1.1",          # BisectingKMeans was added in 1.1
+    "matplotlib>=3.6",
+    "tqdm>=4.62",
+    "streamlit>=1.20",
+    "pyimzml>=1.3",
+    "shapely>=2.0",
+    "networkx>=3.0",
+    "csbdeep>=0.7",
+    "stardist>=0.8",
+    "tensorflow>=2.16; platform_system == 'Darwin'",
+    "tensorflow-cpu>=2.16; platform_system != 'Darwin'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "jupyterlab>=4", "nbconvert>=7"]
+
+[project.urls]
+Homepage = "https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology"
+Publication = "https://doi.org/10.1038/s44303-024-00041-3"
+
+[project.scripts]
+analyze-texture = "scripts.analyze_texture:main"
+segment-nuclei = "scripts.segment_nuclei:main"
+
+[tool.setuptools]
+# The analysis modules live in src/ but are imported as top-level names
+# (modules_2photon, modules_histo, modules_maldi), which is how the notebooks,
+# scripts and app already refer to them.
+package-dir = { "" = "src" }
+py-modules = ["modules_2photon", "modules_histo", "modules_maldi"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Makes src/ importable, replacing the sys.path manipulation that conftest.py
+# previously needed.
+pythonpath = ["src"]
