@@ -102,9 +102,9 @@ def _load_stardist():
 # Tabs
 
 tab1, tab2, tab3 = st.tabs([
-	"🔬 Collagen Texture (2PLSM)",
-	"🧫 Nuclei Segmentation (H&E)",
-	"📂 Batch Processing",
+	"Collagen Texture (2PLSM)",
+	"Nuclei Segmentation (H&E)",
+	"Batch Processing",
 ])
 
 ########################################################################################
