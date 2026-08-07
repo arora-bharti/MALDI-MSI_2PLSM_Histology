@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology/actions/workflows/tests.yml/badge.svg)](https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology/actions/workflows/tests.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs44303--024--00041--3-blue)](https://doi.org/10.1038/s44303-024-00041-3)
+[![Paper DOI](https://img.shields.io/badge/Paper-10.1038%2Fs44303--024--00041--3-blue)](https://doi.org/10.1038/s44303-024-00041-3)
+[![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21843384.svg)](https://doi.org/10.5281/zenodo.21843384)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://maldi-2plsm-histology.streamlit.app/)
 
@@ -151,6 +152,8 @@ Unit tests cover the texture, histology and MALDI modules.
 
 ## Citation
 
+**To cite the study:**
+
 ```bibtex
 @article{arora2024maldi,
   title={MALDI imaging combined with two-photon microscopy reveals local differences in the heterogeneity of colorectal cancer},
@@ -162,6 +165,23 @@ Unit tests cover the texture, histology and MALDI modules.
   doi={10.1038/s44303-024-00041-3}
 }
 ```
+
+**To cite this software** — please also cite this if you used the code, so the
+version you ran is identifiable:
+
+```bibtex
+@software{arora_maldi_2plsm_histology,
+  title={MALDI-MSI\_2PLSM\_Histology: multimodal image analysis for colorectal cancer tissue},
+  author={Arora, Bharti and Kulkarni, Ajinkya},
+  year={2026},
+  publisher={Zenodo},
+  doi={10.5281/zenodo.21843384},
+  url={https://github.com/arora-bharti/MALDI-MSI_2PLSM_Histology}
+}
+```
+
+The DOI above always resolves to the newest release. To pin the exact version you
+used, cite its own DOI instead — v1.0.0 is `10.5281/zenodo.21843385`.
 
 ---
 
